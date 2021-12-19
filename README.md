@@ -10,15 +10,15 @@ Read the wiki for details on how each feature works, as well as how to implement
 
 - Open source - Code can be adjusted to your needs
 - Highly customizable - Many different options for running the player or recorder
-- Extendable base - You can add custom recorders or players to suit your needs if the options aren't enough
-- Seed randomizer - Instead of having a randomizer that calculates delays at runtime, CursorMacro instead calculates delays beforehand, allowing for a deterministic randomizer
+- Extendable base - You can add custom recorders or instructions to suit your needs if the options aren't enough
+- Seed randomizer - Instead of having a randomizer that calculates delays at runtime, CursorMacro instead calculates delays beforehand, allowing for deterministic randomization
 - Delay accounting - The delays are benchmarked to System.currentTimeMillis(), ensuring accurate delays
 - Text-based compilation - CursorMacro uses a text pane to compile the script needed for the player, allowing you to use your favorite text editor to tweak the script beforehand
 
 ## Disadvantages
 
-- The Java mouseMove() function is bugged and often needs multiple mouse moves to reach the target (and sometimes the mouse move misses!), resulting in the mouse jumping back and forth and adding to the delay
-- The text-editor gets very messy when the script is long
+- The Java mouseMove() function is bugged and often needs multiple mouse moves to reach the target (and sometimes the mouse move misses!), resulting in the mouse jumping back and forth while also adding to the delay
+- The text editor gets very messy when the script is long
 
 ## Screenshots
 
