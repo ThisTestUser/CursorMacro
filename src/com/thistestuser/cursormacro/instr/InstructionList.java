@@ -14,7 +14,7 @@ public class InstructionList
 		for(int i = 0; i < instrsSplit.length; i++)
 		{
 			String instr = instrsSplit[i];
-			if(instr.startsWith("//") || instr.equals(""))
+			if(instr.startsWith("//") || instr.trim().isEmpty())
 				continue;
 			String[] instrSplit = instr.split(" ");
 			instructions.add(getInstrForString(instrSplit, i));
@@ -38,7 +38,7 @@ public class InstructionList
 		for(int i = 0; i < instrsSplit.length; i++)
 		{
 			String argsRaw = instrsSplit[i];
-			if(argsRaw.startsWith("//") || argsRaw.equals(""))
+			if(argsRaw.startsWith("//") || argsRaw.trim().isEmpty())
 			{
 				if(argsRaw.equals("// SectionRandomize=true"))
 					sectionRandomize = true;
@@ -161,7 +161,7 @@ public class InstructionList
 				while(i2 < instrsSplit.length)
 				{
 					String instrRaw2 = instrsSplit[i2];
-					if(instrRaw2.startsWith("//") || instrRaw2.equals(""))
+					if(instrRaw2.startsWith("//") || instrRaw2.trim().isEmpty())
 					{
 						if(instrRaw2.equals("// EndSectionRand"))
 						{
