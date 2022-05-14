@@ -45,6 +45,11 @@ public class Player implements Runnable
 				for(Integer i : keyPress)
 					parent.robot.keyRelease(i);
 			}
+			if(parent.autoStopOption.isSelected())
+			{
+				parent.stopButton.doClick();
+				return;
+			}
 			if(parent.playing)
 				parent.stateLbl.setText("State: Execution done in " + (timeNow - startTime) + " MS");
 		}catch(Exception e)

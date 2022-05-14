@@ -71,6 +71,7 @@ public class CursorMacro extends JFrame
 	private JComboBox<Recorder> recorderSelect;
 	private JCheckBox hasStopHotkey;
 	private JButton chooseStopHotkey;
+	public JCheckBox autoStopOption;
 	private int stopKey = 27;
 	private boolean choosingKey;
 	
@@ -453,6 +454,7 @@ public class CursorMacro extends JFrame
 					{
 						textPane.setText(instrList.randomize(textPane.getText(), null, 0, 0,
 							false, reply == JOptionPane.YES_OPTION));
+						compileButton.doClick();
 					}catch(IllegalArgumentException ex)
 					{
 						JOptionPane.showMessageDialog(CursorMacro.this, "Error while parsing instructions: "
@@ -496,6 +498,7 @@ public class CursorMacro extends JFrame
 					}
 					textPane.setText(instrList.randomize(textPane.getText(), random, rndDelay, maxPercent,
 						randomizeLocBox.isSelected(), removeData));
+					compileButton.doClick();
 				}catch(NumberFormatException ex)
 				{
 					JOptionPane.showMessageDialog(CursorMacro.this, "Invaild long value for seed", "Error",
@@ -601,6 +604,14 @@ public class CursorMacro extends JFrame
 		gbc_chooseStopHotkey.gridx = 1;
 		gbc_chooseStopHotkey.gridy = 8;
 		contentPane.add(chooseStopHotkey, gbc_chooseStopHotkey);
+		
+		autoStopOption = new JCheckBox("Auto-Stop", false);
+		autoStopOption.setToolTipText("Automatically exits execution mode when done.");
+		GridBagConstraints gbc_autoStopOption = new GridBagConstraints();
+		gbc_autoStopOption.insets = new Insets(0, 0, 5, 5);
+		gbc_autoStopOption.gridx = 2;
+		gbc_autoStopOption.gridy = 8;
+		contentPane.add(autoStopOption, gbc_autoStopOption);
 		
 		statusLbl = new JLabel("Status: Not compiled");
 		GridBagConstraints gbc_statusLbl = new GridBagConstraints();
