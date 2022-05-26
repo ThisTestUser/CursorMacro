@@ -1,9 +1,11 @@
 package com.thistestuser.cursormacro.instr;
 
-import java.awt.MouseInfo;
+import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Robot;
+import java.awt.Toolkit;
 
+import com.thistestuser.cursormacro.CursorMacro;
 import com.thistestuser.cursormacro.Player;
 
 public class MouseMove extends Instruction
@@ -15,12 +17,14 @@ public class MouseMove extends Instruction
 	private int offX;
 	private int offY;
 	
+	private static final Dimension SCREEN_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
+	
 	public MouseMove() {}
 	
 	public MouseMove(int mouseX, int mouseY)
 	{
-		this.mouseX = mouseX;
-		this.mouseY = mouseY;
+		this.mouseX = Math.min(Math.max(0, mouseX), SCREEN_SIZE.width - 1);
+		this.mouseY = Math.min(Math.max(0, mouseY), SCREEN_SIZE.height - 1);
 	}
 
 	@Override
@@ -28,8 +32,8 @@ public class MouseMove extends Instruction
 	{
 		if(args.length != 3 && args.length != 5 && args.length != 7)
 			throw new IllegalArgumentException("MOUSEMOVE can only have 3, 5, or 7 args");
-		mouseX = Integer.parseInt(args[1]);
-		mouseY = Integer.parseInt(args[2]);
+		mouseX = Math.min(Math.max(0, Integer.parseInt(args[1])), SCREEN_SIZE.width - 1);
+		mouseY = Math.min(Math.max(0, Integer.parseInt(args[2])), SCREEN_SIZE.height - 1);
 		if(args.length > 3)
 		{
 			tolX = Integer.parseInt(args[3]);
@@ -49,29 +53,12 @@ public class MouseMove extends Instruction
 	{
 		int x = mouseX + offX;
 		int y = mouseY + offY;
-		int tempX = x;
-		int tempY = y;
 		int count = 0;
-		int moveX = x * 4/5;
-		int moveY = y * 4/5;
-		robot.mouseMove(0, 0);
-		robot.mouseMove(x, y);
-		Point loc = MouseInfo.getPointerInfo().getLocation();
-		while((Math.abs(loc.x - x) > tolX || Math.abs(loc.y - y) > tolY) && count < 25)
+		Point loc = CursorMacro.getMouseLocation();
+		while((Math.abs(loc.x - x) > tolX || Math.abs(loc.y - y) > tolY) && count < 10)
 		{
-			if(loc.x > x)
-				tempX--;
-			else if(loc.x < x)
-				tempX++;
-			if(loc.y > y)
-				tempY--;
-			else if(loc.y < y)
-				tempY++;
-			moveX = tempX * 4/5;
-			moveY = tempY * 4/5;
-			robot.mouseMove(0, 0);
-			robot.mouseMove(moveX, moveY);
-			loc = MouseInfo.getPointerInfo().getLocation();
+			CursorMacro.setMouseLocation(x, y);
+			loc = CursorMacro.getMouseLocation();
 			count++;
 		}
 	}

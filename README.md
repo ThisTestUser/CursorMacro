@@ -17,9 +17,26 @@ Read the wiki for details on how each feature works, as well as how to implement
 
 ## Disadvantages
 
-- The Java mouseMove() function is bugged and often needs multiple mouse moves to reach the target (and sometimes the mouse move misses!), resulting in the mouse jumping back and forth while also adding to the delay
 - The text editor gets very messy when the script is long
+- This program only works for 64-bit windows versions (but one could compile the C++ sources to support other operating systems)
 
-## Screenshots
+## Screenshot
 
 ![swing](swing.png)
+
+## Building
+
+This project makes use of native code. The native methods are all located in CursorMacro.java. To compile in Windows, first install Cygwin. Install mingw64-x86_64-gcc-g++ and launch the Cygwin terminal.
+
+Then, run the following command to assemble the C++ code (ensure JDK is the main path):
+
+```
+x86_64-w64-mingw32-g++ -c -I%JAVA_HOME%\include -I%JAVA_HOME%\include\win32 -I"src\cpp" "src\cpp\com_thistestuser_cursormacro_CursorMacro.cpp" -o "com_thistestuser_cursormacro_CursorMacro.o"
+```
+Finally, create a dll file:
+
+```
+x86_64-w64-mingw32-g++ -shared -o "src\lib\mouseutils.dll" "com_thistestuser_cursormacro_CursorMacro.o" -Wl,--add-stdcall-alias
+```
+
+For details on how to compile for other operating systems, see the tutorial at [Baeldung](https://www.baeldung.com/jni).

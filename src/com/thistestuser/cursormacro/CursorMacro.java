@@ -2,6 +2,9 @@ package com.thistestuser.cursormacro;
 
 import java.awt.AWTException;
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
@@ -33,6 +36,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.awt.event.ActionEvent;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.Robot;
 
 import javax.swing.JScrollPane;
@@ -652,5 +656,41 @@ public class CursorMacro extends JFrame
 		choosingKey = false;
 		chooseStopHotkey.setText("Key: " + KeyEvent.getKeyText(stopKey));
 		chooseStopHotkey.setEnabled(enableButton);
+	}
+	
+	public static native boolean setMouseLocation(int x, int y);
+	
+	public static native Point getMouseLocation();
+	
+	private static native void setupDPI();
+	
+	private static void loadNativeLibrary() throws Exception
+	{
+		File library = File.createTempFile("mouseutils", ".dll");
+        library.deleteOnExit();
+        try(InputStream input = CursorMacro.class.getResourceAsStream("/lib/mouseutils.dll"))
+        {
+            try(FileOutputStream out = new FileOutputStream(library))
+            {
+            	int bytes;
+            	byte[] buffer = new byte[2048];
+            	
+            	while((bytes = input.read(buffer)) != -1)
+            		out.write(buffer, 0, bytes);
+            }	
+        }
+        System.load(library.getAbsolutePath());
+	}
+	
+	static
+	{
+		try
+		{
+			loadNativeLibrary();
+			setupDPI();
+		}catch(Exception e)
+		{
+			throw new RuntimeException("Cannot load mouseutils library", e);
+		}
 	}
 }
