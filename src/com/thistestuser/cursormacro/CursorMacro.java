@@ -189,7 +189,6 @@ public class CursorMacro extends JFrame
 				disableStopKeyChoose(false);
 				activeRecorder = (Recorder)recorderSelect.getSelectedItem();
 				activeRecorder.startRecording(delay, snapMouseRecordBox.isSelected());
-				stateLbl.setText("State: Recording (instruction 0)");
 			}
 		});
 		GridBagConstraints gbc_recordButton = new GridBagConstraints();
@@ -288,7 +287,6 @@ public class CursorMacro extends JFrame
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				instrList.getInstructions().clear();
 				try
 				{
 					instrList.compile(textPane.getText());

@@ -10,6 +10,7 @@ public class InstructionList
 	
 	public void compile(String args) throws IllegalArgumentException
 	{
+		instructions.clear();
 		String[] instrsSplit = args.split("\\r?\\n");
 		for(int i = 0; i < instrsSplit.length; i++)
 		{

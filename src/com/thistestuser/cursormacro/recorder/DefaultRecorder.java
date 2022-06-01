@@ -50,6 +50,7 @@ public class DefaultRecorder extends Recorder
 		instructions.clear();
 		recording = true;
 		startTime = lastInstrTime = System.currentTimeMillis();
+		parent.stateLbl.setText("State: Recording (instruction 0)");
 	}
 	
 	@Override
