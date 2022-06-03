@@ -2,7 +2,7 @@ package com.thistestuser.cursormacro.instr;
 
 import java.awt.event.MouseEvent;
 
-import com.thistestuser.cursormacro.Player;
+import com.thistestuser.cursormacro.player.Player;
 
 import java.awt.Robot;
 

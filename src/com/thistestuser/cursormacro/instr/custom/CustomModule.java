@@ -3,7 +3,7 @@ package com.thistestuser.cursormacro.instr.custom;
 import java.awt.Robot;
 import java.util.Random;
 
-import com.thistestuser.cursormacro.Player;
+import com.thistestuser.cursormacro.player.Player;
 
 public abstract class CustomModule
 {

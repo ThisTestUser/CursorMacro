@@ -1,8 +1,8 @@
 package com.thistestuser.cursormacro.instr;
 
-import com.thistestuser.cursormacro.Player;
-
 import java.awt.Robot;
+
+import com.thistestuser.cursormacro.player.Player;
 
 public class MouseWheel extends Instruction
 {

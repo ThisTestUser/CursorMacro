@@ -6,7 +6,7 @@ import java.awt.Robot;
 import java.awt.Toolkit;
 
 import com.thistestuser.cursormacro.CursorMacro;
-import com.thistestuser.cursormacro.Player;
+import com.thistestuser.cursormacro.player.Player;
 
 public class MouseMove extends Instruction
 {

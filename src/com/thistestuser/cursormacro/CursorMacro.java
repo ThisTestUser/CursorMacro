@@ -17,8 +17,10 @@ import javax.swing.border.EmptyBorder;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
-import com.thistestuser.cursormacro.instr.InstructionList;
 import com.thistestuser.cursormacro.instr.custom.CustomInstructions;
+import com.thistestuser.cursormacro.player.DefaultPlayer;
+import com.thistestuser.cursormacro.player.Player;
+import com.thistestuser.cursormacro.player.custom.CustomPlayers;
 import com.thistestuser.cursormacro.recorder.DefaultRecorder;
 import com.thistestuser.cursormacro.recorder.Recorder;
 import com.thistestuser.cursormacro.recorder.custom.CustomRecorders;
@@ -62,17 +64,19 @@ public class CursorMacro extends JFrame
 	private JCheckBox snapMouseRecordBox;
 	private String lastCompile;
 	
-	private InstructionList instrList = new InstructionList();
 	public List<Recorder> recorders = new ArrayList<>();
 	private Recorder activeRecorder;
-	private Thread player;
-	private Player playerRunnable;
+	public List<Player> players = new ArrayList<>();
+	private Player activePlayer;
+	private Thread playerThread;
 	public boolean playing;
 	public Robot robot;
 	private JCheckBox unpressBox;
 	private JCheckBox randomizeLocBox;
 	private JLabel selectRecorderLbl;
 	private JComboBox<Recorder> recorderSelect;
+	private JLabel selectPlayerLbl;
+	private JComboBox<Player> playerSelect;
 	private JCheckBox hasStopHotkey;
 	private JButton chooseStopHotkey;
 	public JCheckBox autoStopOption;
@@ -120,6 +124,12 @@ public class CursorMacro extends JFrame
 		recorders.add(new DefaultRecorder(this));
 		CustomRecorders.register(this);
 		recorders.forEach(Recorder::setup);
+		
+		//Initialize players
+		players.add(new DefaultPlayer(this));
+		CustomPlayers.register(this);
+		players.forEach(Player::setup);
+		
 		try
 		{
 			robot = new Robot();
@@ -144,7 +154,7 @@ public class CursorMacro extends JFrame
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
-		gbl_contentPane.rowWeights = new double[]{0.0, 0.8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.1};
+		gbl_contentPane.rowWeights = new double[]{0.0, 0.8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.1};
 		gbl_contentPane.columnWeights = new double[]{0.2, 1.0, 0.2};
 		contentPane.setLayout(gbl_contentPane);
 		
@@ -211,16 +221,14 @@ public class CursorMacro extends JFrame
 					if(reply != JOptionPane.YES_OPTION)
 						return;
 				}
-				stateLbl.setText("State: Executing 0/" + instrList.getInstructions().size());
 				recordButton.setEnabled(false);
 				startButton.setEnabled(false);
 				compileButton.setEnabled(false);
 				applyButton.setEnabled(false);
 				disableStopKeyChoose(false);
 				playing = true;
-				playerRunnable = new Player(instrList.getInstructions(), CursorMacro.this, unpressBox.isSelected());
-				player = new Thread(playerRunnable, "Macro Executor");
-				player.start();
+				playerThread = new Thread(activePlayer, "Macro Executor");
+				playerThread.start();
 			}
 		});
 		GridBagConstraints gbc_startButton = new GridBagConstraints();
@@ -242,21 +250,15 @@ public class CursorMacro extends JFrame
 					activeRecorder = null;
 				}
 				playing = false;
-				if(player != null)
+				if(playerThread != null)
 				{
-					player.interrupt();
-					if(playerRunnable.unpress)
-					{
-						for(Integer i : playerRunnable.mousePress)
-							robot.mouseRelease(i);
-						for(Integer i : playerRunnable.keyPress)
-							robot.keyRelease(i);
-					}
-					playerRunnable = null;
-					player = null;
+					playerThread.interrupt();
+					if(activePlayer.unpress)
+						activePlayer.unpress(robot);
+					playerThread = null;
 				}
 				recordButton.setEnabled(true);
-				startButton.setEnabled(!instrList.getInstructions().isEmpty());
+				startButton.setEnabled(activePlayer != null && activePlayer.hasInstructions());
 				compileButton.setEnabled(true);
 				applyButton.setEnabled(true);
 				disableStopKeyChoose(true);
@@ -289,24 +291,24 @@ public class CursorMacro extends JFrame
 			{
 				try
 				{
-					instrList.compile(textPane.getText());
-					SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss:SSS MM/dd/yyyy");
-					if(instrList.getInstructions().isEmpty())
+					activePlayer.clearInstructions();
+					activePlayer.compile(textPane.getText());
+					if(!activePlayer.hasInstructions())
 						statusLbl.setText("Status: Not compiled");
 					else
 					{
+						SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss:SSS MM/dd/yyyy");
 						statusLbl.setText("Status: Compiled at " + format.format(new Date()));
 						lastCompile = textPane.getText();
 					}
 				}catch(IllegalArgumentException ex)
 				{
-					instrList.getInstructions().clear();
+					activePlayer.clearInstructions();
 					JOptionPane.showMessageDialog(CursorMacro.this, ex.getMessage(), "Compile Error",
 						JOptionPane.ERROR_MESSAGE);
 					statusLbl.setText("Status: Failed to compile");
 				}
-				boolean hasInstr = !instrList.getInstructions().isEmpty();
-				startButton.setEnabled(hasInstr);
+				startButton.setEnabled(activePlayer.hasInstructions());
 			}
 		});
 		
@@ -454,7 +456,7 @@ public class CursorMacro extends JFrame
 						return;
 					try
 					{
-						textPane.setText(instrList.randomize(textPane.getText(), null, 0, 0,
+						textPane.setText(activePlayer.randomize(textPane.getText(), null, 0, 0,
 							false, reply == JOptionPane.YES_OPTION));
 						compileButton.doClick();
 					}catch(IllegalArgumentException ex)
@@ -498,7 +500,7 @@ public class CursorMacro extends JFrame
 							return;
 						removeData = reply == JOptionPane.YES_OPTION;
 					}
-					textPane.setText(instrList.randomize(textPane.getText(), random, rndDelay, maxPercent,
+					textPane.setText(activePlayer.randomize(textPane.getText(), random, rndDelay, maxPercent,
 						randomizeLocBox.isSelected(), removeData));
 					compileButton.doClick();
 				}catch(NumberFormatException ex)
@@ -561,7 +563,7 @@ public class CursorMacro extends JFrame
 		gbc_selectRecorderLbl.gridy = 7;
 		contentPane.add(selectRecorderLbl, gbc_selectRecorderLbl);
 		
-		recorderSelect = new JComboBox<Recorder>();
+		recorderSelect = new JComboBox<>();
 		recorders.forEach(rec -> recorderSelect.addItem(rec));
 		GridBagConstraints gbc_recorderSelect = new GridBagConstraints();
 		gbc_recorderSelect.insets = new Insets(0, 0, 5, 5);
@@ -569,6 +571,47 @@ public class CursorMacro extends JFrame
 		gbc_recorderSelect.gridx = 1;
 		gbc_recorderSelect.gridy = 7;
 		contentPane.add(recorderSelect, gbc_recorderSelect);
+		
+		selectPlayerLbl = new JLabel("Select Player:");
+		selectPlayerLbl.setToolTipText("<html>"
+            + "Here you can select a custom player."
+            + "<br>" + "The default player executes mouse and key actions."
+            + "<br>" + "You can compile custom recorders that record in different ways."+ "</html>");
+		GridBagConstraints gbc_selectPlayerLbl = new GridBagConstraints();
+		gbc_selectPlayerLbl.anchor = GridBagConstraints.EAST;
+		gbc_selectPlayerLbl.insets = new Insets(0, 0, 5, 5);
+		gbc_selectPlayerLbl.gridx = 0;
+		gbc_selectPlayerLbl.gridy = 8;
+		contentPane.add(selectPlayerLbl, gbc_selectPlayerLbl);
+		
+		playerSelect = new JComboBox<>();
+		players.forEach(player -> playerSelect.addItem(player));
+		playerSelect.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				if(activePlayer == playerSelect.getSelectedItem())
+					return;
+				if(activePlayer != null)
+					activePlayer.clearInstructions();
+				activePlayer = (Player)playerSelect.getSelectedItem();
+				
+				//Clear compiled code
+				startButton.setEnabled(false);
+				if(statusLbl != null)
+					statusLbl.setText("Status: Not compiled");
+			}
+		});
+		GridBagConstraints gbc_playerSelect = new GridBagConstraints();
+		gbc_playerSelect.insets = new Insets(0, 0, 5, 5);
+		gbc_playerSelect.fill = GridBagConstraints.HORIZONTAL;
+		gbc_playerSelect.gridx = 1;
+		gbc_playerSelect.gridy = 8;
+		contentPane.add(playerSelect, gbc_playerSelect);
+		
+		playerSelect.setSelectedIndex(0);
+		activePlayer = (Player)playerSelect.getSelectedItem();
 		
 		hasStopHotkey = new JCheckBox("Stop Hotkey", true);
 		hasStopHotkey.addActionListener(new ActionListener()
@@ -587,7 +630,7 @@ public class CursorMacro extends JFrame
 		GridBagConstraints gbc_hasStopHotkey = new GridBagConstraints();
 		gbc_hasStopHotkey.insets = new Insets(0, 0, 5, 5);
 		gbc_hasStopHotkey.gridx = 0;
-		gbc_hasStopHotkey.gridy = 8;
+		gbc_hasStopHotkey.gridy = 9;
 		contentPane.add(hasStopHotkey, gbc_hasStopHotkey);
 		
 		chooseStopHotkey = new JButton("Key: " + KeyEvent.getKeyText(stopKey));
@@ -604,7 +647,7 @@ public class CursorMacro extends JFrame
 		GridBagConstraints gbc_chooseStopHotkey = new GridBagConstraints();
 		gbc_chooseStopHotkey.insets = new Insets(0, 0, 5, 5);
 		gbc_chooseStopHotkey.gridx = 1;
-		gbc_chooseStopHotkey.gridy = 8;
+		gbc_chooseStopHotkey.gridy = 9;
 		contentPane.add(chooseStopHotkey, gbc_chooseStopHotkey);
 		
 		autoStopOption = new JCheckBox("Auto-Stop", false);
@@ -612,7 +655,7 @@ public class CursorMacro extends JFrame
 		GridBagConstraints gbc_autoStopOption = new GridBagConstraints();
 		gbc_autoStopOption.insets = new Insets(0, 0, 5, 5);
 		gbc_autoStopOption.gridx = 2;
-		gbc_autoStopOption.gridy = 8;
+		gbc_autoStopOption.gridy = 9;
 		contentPane.add(autoStopOption, gbc_autoStopOption);
 		
 		statusLbl = new JLabel("Status: Not compiled");
@@ -620,14 +663,14 @@ public class CursorMacro extends JFrame
 		gbc_statusLbl.insets = new Insets(0, 0, 5, 0);
 		gbc_statusLbl.gridx = 0;
 		gbc_statusLbl.gridwidth = 3;
-		gbc_statusLbl.gridy = 9;
+		gbc_statusLbl.gridy = 10;
 		contentPane.add(statusLbl, gbc_statusLbl);
 		
 		stateLbl = new JLabel("State: Idle");
 		GridBagConstraints gbc_stateLbl = new GridBagConstraints();
 		gbc_stateLbl.gridx = 0;
 		gbc_stateLbl.gridwidth = 3;
-		gbc_stateLbl.gridy = 10;
+		gbc_stateLbl.gridy = 11;
 		contentPane.add(stateLbl, gbc_stateLbl);
 		
 		startButton.setEnabled(false);

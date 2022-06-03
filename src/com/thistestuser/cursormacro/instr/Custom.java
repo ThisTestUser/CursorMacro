@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import com.thistestuser.cursormacro.Player;
 import com.thistestuser.cursormacro.instr.custom.CustomModule;
+import com.thistestuser.cursormacro.player.Player;
 
 public class Custom extends Instruction
 {

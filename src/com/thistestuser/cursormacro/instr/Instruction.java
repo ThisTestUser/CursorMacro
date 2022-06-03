@@ -2,7 +2,7 @@ package com.thistestuser.cursormacro.instr;
 
 import java.awt.Robot;
 
-import com.thistestuser.cursormacro.Player;
+import com.thistestuser.cursormacro.player.Player;
 
 public abstract class Instruction
 {

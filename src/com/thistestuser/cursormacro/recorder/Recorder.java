@@ -5,7 +5,7 @@ import javax.swing.JTextPane;
 public abstract class Recorder
 {
 	/**
-	 * Sets up the recorder by initializing listeners.
+	 * Sets up the recorder by initializing listeners. This is only run once and at the beginning.
 	 */
 	public abstract void setup();
 	
