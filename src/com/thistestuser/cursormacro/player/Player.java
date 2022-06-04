@@ -4,13 +4,12 @@ import java.awt.Robot;
 import java.util.Random;
 import java.util.TreeSet;
 
-public abstract class Player implements Runnable
+public abstract class Player
 {
 	public TreeSet<Integer> mousePress = new TreeSet<>();
 	public TreeSet<Integer> keyPress = new TreeSet<>();
 	public long startTime;
 	public long expectedTime;
-	public boolean unpress;
 	
 	/**
 	 * Sets up the player by initializing listeners. This is only run once and at the beginning.
@@ -18,9 +17,19 @@ public abstract class Player implements Runnable
 	public abstract void setup();
 	
 	/**
-	 * Runs the instruction player. This method should run in a separate thread.
+	 * Starts the instruction player. This method should start a separate thread.
 	 */
-	public abstract void run();
+	public abstract void start(boolean unpress);
+	
+	/**
+	 * Stops the instruction player. This should send a signal to stop the thread.
+	 */
+	public abstract void stop();
+	
+	/**
+	 * Check if the thread has terminated yet. If this is true, nothing is allowed to be run.
+	 */
+	public abstract boolean isRunning();
 
 	public void registerMouse(boolean press, int button)
 	{

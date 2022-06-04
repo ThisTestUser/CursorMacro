@@ -68,8 +68,7 @@ public class CursorMacro extends JFrame
 	private Recorder activeRecorder;
 	public List<Player> players = new ArrayList<>();
 	private Player activePlayer;
-	private Thread playerThread;
-	public boolean playing;
+	private boolean playing;
 	public Robot robot;
 	private JCheckBox unpressBox;
 	private JCheckBox randomizeLocBox;
@@ -169,6 +168,8 @@ public class CursorMacro extends JFrame
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
+				if(activePlayer.isRunning())
+					return;
 				if(recorderSelect.getSelectedIndex() == -1)
 				{
 					JOptionPane.showMessageDialog(CursorMacro.this, "You did not select a recorder!", "Error",
@@ -213,6 +214,8 @@ public class CursorMacro extends JFrame
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
+				if(activePlayer.isRunning())
+					return;
 				if(!textPane.getText().equals(lastCompile))
 				{
 					int reply = JOptionPane.showConfirmDialog(CursorMacro.this, "You have changed your"
@@ -225,10 +228,10 @@ public class CursorMacro extends JFrame
 				startButton.setEnabled(false);
 				compileButton.setEnabled(false);
 				applyButton.setEnabled(false);
+				playerSelect.setEnabled(false);
 				disableStopKeyChoose(false);
 				playing = true;
-				playerThread = new Thread(activePlayer, "Macro Executor");
-				playerThread.start();
+				activePlayer.start(unpressBox.isSelected());
 			}
 		});
 		GridBagConstraints gbc_startButton = new GridBagConstraints();
@@ -249,18 +252,16 @@ public class CursorMacro extends JFrame
 					activeRecorder.stopRecording(textPane);
 					activeRecorder = null;
 				}
-				playing = false;
-				if(playerThread != null)
+				if(playing)
 				{
-					playerThread.interrupt();
-					if(activePlayer.unpress)
-						activePlayer.unpress(robot);
-					playerThread = null;
+					playing = false;
+					activePlayer.stop();
 				}
 				recordButton.setEnabled(true);
-				startButton.setEnabled(activePlayer != null && activePlayer.hasInstructions());
+				startButton.setEnabled(activePlayer.hasInstructions());
 				compileButton.setEnabled(true);
 				applyButton.setEnabled(true);
+				playerSelect.setEnabled(true);
 				disableStopKeyChoose(true);
 				stateLbl.setText("State: Idle");
 			}
@@ -593,8 +594,7 @@ public class CursorMacro extends JFrame
 			{
 				if(activePlayer == playerSelect.getSelectedItem())
 					return;
-				if(activePlayer != null)
-					activePlayer.clearInstructions();
+				activePlayer.clearInstructions();
 				activePlayer = (Player)playerSelect.getSelectedItem();
 				
 				//Clear compiled code
@@ -610,8 +610,8 @@ public class CursorMacro extends JFrame
 		gbc_playerSelect.gridy = 8;
 		contentPane.add(playerSelect, gbc_playerSelect);
 		
+		activePlayer = players.get(0);
 		playerSelect.setSelectedIndex(0);
-		activePlayer = (Player)playerSelect.getSelectedItem();
 		
 		hasStopHotkey = new JCheckBox("Stop Hotkey", true);
 		hasStopHotkey.addActionListener(new ActionListener()

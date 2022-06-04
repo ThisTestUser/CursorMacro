@@ -9,7 +9,9 @@ import com.thistestuser.cursormacro.instr.InstructionList;
 public class DefaultPlayer extends Player
 {
 	private InstructionList list;
-	public CursorMacro parent;
+	private final CursorMacro parent;
+	private Thread execution;
+	private volatile boolean playing;
 	
 	public DefaultPlayer(CursorMacro parent)
 	{
@@ -22,34 +24,56 @@ public class DefaultPlayer extends Player
 	{}
 	
 	@Override
-	public void run()
+	public void start(boolean unpress)
 	{
-		startTime = expectedTime = System.currentTimeMillis();
-		try
+		playing = true;
+		execution = new Thread()
 		{
-			for(int i = 0; i < list.getInstructions().size(); i++)
+			@Override
+			public void run()
 			{
-				if(!parent.playing)
-					break;
-				Instruction instr = list.getInstructions().get(i);
-				parent.stateLbl.setText("State: Executing " + (i + 1) + "/" + list.getInstructions().size());
-				instr.executeInstruction(this, parent.robot);
+				startTime = expectedTime = System.currentTimeMillis();
+				try
+				{
+					for(int i = 0; i < list.getInstructions().size(); i++)
+					{
+						if(!playing)
+							break;
+						Instruction instr = list.getInstructions().get(i);
+						parent.stateLbl.setText("State: Executing " + (i + 1) + "/" + list.getInstructions().size());
+						instr.executeInstruction(DefaultPlayer.this, parent.robot);
+					}
+					long timeNow = System.currentTimeMillis();
+					if(unpress)
+						unpress(parent.robot);
+					if(parent.autoStopOption.isSelected())
+					{
+						parent.stopButton.doClick();
+						return;
+					}
+					if(playing)
+						parent.stateLbl.setText("State: Execution done in " + (timeNow - startTime) + " MS");
+				}catch(Exception e)
+				{
+					if(playing)
+						parent.stateLbl.setText("State: Execution failed " + e.getClass().getName() + " (" + e.getMessage() + ")");
+				}
 			}
-			long timeNow = System.currentTimeMillis();
-			if(unpress)
-				unpress(parent.robot);
-			if(parent.autoStopOption.isSelected())
-			{
-				parent.stopButton.doClick();
-				return;
-			}
-			if(parent.playing)
-				parent.stateLbl.setText("State: Execution done in " + (timeNow - startTime) + " MS");
-		}catch(Exception e)
-		{
-			if(parent.playing)
-				parent.stateLbl.setText("State: Execution failed " + e.getClass().getName() + " (" + e.getMessage() + ")");
-		}
+		};
+		execution.start();
+	}
+	
+	@Override
+	public void stop()
+	{
+		execution.interrupt();
+		playing = false;
+	}
+	
+	@Override
+	public boolean isRunning()
+	{
+		return execution != null && execution.isAlive();
 	}
 	
 	@Override
