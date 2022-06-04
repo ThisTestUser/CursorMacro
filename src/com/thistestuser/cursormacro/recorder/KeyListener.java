@@ -18,7 +18,7 @@ public class KeyListener extends SwingKeyAdapter
 	@Override
 	public void keyPressed(KeyEvent e)
 	{
-		if(recorder.isRecording())
+		if(e.getKeyCode() != recorder.getStopKey() && recorder.isRecording())
 			recorder.addInstrWithDelay(new KeyType(0, e.getKeyCode()));
 	}
 	
@@ -30,7 +30,10 @@ public class KeyListener extends SwingKeyAdapter
 			recorder.setStopKey(e.getKeyCode());
 		//Stop handler (always active)
 		if(e.getKeyCode() == recorder.getStopKey())
+		{
 			recorder.pressStop();
+			return;
+		}
 		if(recorder.isRecording())
 			recorder.addInstrWithDelay(new KeyType(1, e.getKeyCode()));
 	}

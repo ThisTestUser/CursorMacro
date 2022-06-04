@@ -57,6 +57,10 @@ public class DefaultPlayer extends Player
 				{
 					if(playing)
 						parent.stateLbl.setText("State: Execution failed " + e.getClass().getName() + " (" + e.getMessage() + ")");
+				}finally
+				{
+					if(!playing)
+						parent.resetButtonsToIdle();
 				}
 			}
 		};

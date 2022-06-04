@@ -58,6 +58,8 @@ public class CursorMacro extends JFrame
 	private JTextField recordField;
 	private JLabel statusLbl;
 	public JLabel stateLbl;
+	private JButton recordButton;
+	private JButton startButton;
 	public JButton stopButton;
 	private JButton compileButton;
 	private JButton applyButton;
@@ -157,9 +159,7 @@ public class CursorMacro extends JFrame
 		gbl_contentPane.columnWeights = new double[]{0.2, 1.0, 0.2};
 		contentPane.setLayout(gbl_contentPane);
 		
-		JButton startButton = new JButton("Start");
-		
-		JButton recordButton = new JButton("Record");
+		recordButton = new JButton("Record");
 		recordButton.setToolTipText("<html>"
             + "Press this button to record your keyboard and mouse."
             + "<br>" + "Warning: This will overwrite the macro you have." + "</html>");
@@ -168,8 +168,6 @@ public class CursorMacro extends JFrame
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				if(activePlayer.isRunning())
-					return;
 				if(recorderSelect.getSelectedIndex() == -1)
 				{
 					JOptionPane.showMessageDialog(CursorMacro.this, "You did not select a recorder!", "Error",
@@ -208,14 +206,13 @@ public class CursorMacro extends JFrame
 		gbc_recordButton.gridy = 0;
 		contentPane.add(recordButton, gbc_recordButton);
 		
+		startButton = new JButton("Start");
 		startButton.setToolTipText("Runs the compiled macro code. You must press compile first.");
 		startButton.addActionListener(new ActionListener()
 		{
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				if(activePlayer.isRunning())
-					return;
 				if(!textPane.getText().equals(lastCompile))
 				{
 					int reply = JOptionPane.showConfirmDialog(CursorMacro.this, "You have changed your"
@@ -257,13 +254,8 @@ public class CursorMacro extends JFrame
 					playing = false;
 					activePlayer.stop();
 				}
-				recordButton.setEnabled(true);
-				startButton.setEnabled(activePlayer.hasInstructions());
-				compileButton.setEnabled(true);
-				applyButton.setEnabled(true);
-				playerSelect.setEnabled(true);
-				disableStopKeyChoose(true);
-				stateLbl.setText("State: Idle");
+				if(!activePlayer.isRunning())
+					resetButtonsToIdle();
 			}
 		});
 		GridBagConstraints gbc_stopButton = new GridBagConstraints();
@@ -697,6 +689,17 @@ public class CursorMacro extends JFrame
 		choosingKey = false;
 		chooseStopHotkey.setText("Key: " + KeyEvent.getKeyText(stopKey));
 		chooseStopHotkey.setEnabled(enableButton);
+	}
+	
+	public void resetButtonsToIdle()
+	{
+		recordButton.setEnabled(true);
+		startButton.setEnabled(activePlayer.hasInstructions());
+		compileButton.setEnabled(true);
+		applyButton.setEnabled(true);
+		playerSelect.setEnabled(true);
+		disableStopKeyChoose(true);
+		stateLbl.setText("State: Idle");
 	}
 	
 	public static native boolean setMouseLocation(int x, int y);
