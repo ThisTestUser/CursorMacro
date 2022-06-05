@@ -66,7 +66,7 @@ public abstract class Player
 	public abstract void compile(String instrs);
 	
 	/**
-	 * Compiles the instruction list with randomization.
+	 * Compiles the instruction list with randomization. Returns the string representation of the randomized result.
 	 */
 	public abstract String randomize(String instrs, Random random, long rndDelay, float maxPercent, boolean randomLoc, boolean removeData);
 	

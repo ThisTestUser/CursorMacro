@@ -142,7 +142,7 @@ public class CursorMacro extends JFrame
 		
 		setTitle("CursorMacro");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 550);
+		setBounds(100, 100, 450, 580);
 		try
 		{
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -255,7 +255,7 @@ public class CursorMacro extends JFrame
 					activePlayer.stop();
 				}
 				if(!activePlayer.isRunning())
-					resetButtonsToIdle();
+					resetToIdleState();
 			}
 		});
 		GridBagConstraints gbc_stopButton = new GridBagConstraints();
@@ -691,7 +691,7 @@ public class CursorMacro extends JFrame
 		chooseStopHotkey.setEnabled(enableButton);
 	}
 	
-	public void resetButtonsToIdle()
+	public void resetToIdleState()
 	{
 		recordButton.setEnabled(true);
 		startButton.setEnabled(activePlayer.hasInstructions());

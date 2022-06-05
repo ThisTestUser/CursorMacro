@@ -10,6 +10,11 @@ public class InstructionList
 	
 	public void compile(String args) throws IllegalArgumentException
 	{
+		compile(args, 0);
+	}
+	
+	public void compile(String args, int offset) throws IllegalArgumentException
+	{
 		String[] instrsSplit = args.split("\\r?\\n");
 		for(int i = 0; i < instrsSplit.length; i++)
 		{
@@ -17,11 +22,16 @@ public class InstructionList
 			if(instr.startsWith("//") || instr.trim().isEmpty())
 				continue;
 			String[] instrSplit = instr.split(" ");
-			instructions.add(getInstrForString(instrSplit, i));
+			instructions.add(getInstrForString(instrSplit, i + offset + 1));
 		}
 	}
 	
 	public String randomize(String instrs, Random random, long rndDelay, float maxPercent, boolean randomLoc, boolean removeData)
+	{
+		return randomize(instrs, random, rndDelay, maxPercent, randomLoc, removeData, 0);
+	}
+	
+	public String randomize(String instrs, Random random, long rndDelay, float maxPercent, boolean randomLoc, boolean removeData, int offset)
 	{
 		String builder = "";
 		String[] instrsSplit = instrs.split("\\r?\\n");
@@ -38,6 +48,7 @@ public class InstructionList
 		for(int i = 0; i < instrsSplit.length; i++)
 		{
 			String argsRaw = instrsSplit[i];
+			int line = i + offset + 1;
 			if(argsRaw.startsWith("//") || argsRaw.trim().isEmpty())
 			{
 				if(argsRaw.equals("// SectionRandomize=true"))
@@ -46,7 +57,7 @@ public class InstructionList
 				{
 					if(isRandomizingSection)
 						throw new IllegalArgumentException("Cannot end section randomizer when there is "
-							+ "an active session not ended at line " + (i + 1));
+							+ "an active session not ended at line " + line);
 					sectionRandomize = false;
 				}
 				if(sectionRandomize)
@@ -55,7 +66,7 @@ public class InstructionList
 					{
 						if(isRandomizingSection)
 							throw new IllegalArgumentException("Cannot start section randomizer again at line "
-								+ (i + 1));
+								+ line);
 						isRandomizingSection = true;
 						shouldBalance = false;
 						sectionTotalOffset = 0;
@@ -64,7 +75,7 @@ public class InstructionList
 					{
 						if(isRandomizingSection)
 							throw new IllegalArgumentException("Cannot start section randomizer again at line "
-								+ (i + 1));
+								+ line);
 						isRandomizingSection = true;
 						if(random == null)
 							shouldBalance = false;
@@ -85,7 +96,7 @@ public class InstructionList
 				continue;
 			}
 			String[] argsSplit = argsRaw.split(" ");
-			Instruction instr = getInstrForString(argsSplit, i);
+			Instruction instr = getInstrForString(argsSplit, line);
 			if(sectionRandomize && !isRandomizingSection)
 			{
 				if(instr instanceof Delay)
@@ -117,12 +128,12 @@ public class InstructionList
 				}else
 				{
 					long actualRndDelay = Math.min(rndDelay, Math.round(delayNum * maxPercent / 100));
-					int offset = Math.round((random.nextFloat() - 0.5F) * actualRndDelay * 2);
-					delay.setOffset(offset);
-					runtime += delayNum + offset;
+					int delayOffset = Math.round((random.nextFloat() - 0.5F) * actualRndDelay * 2);
+					delay.setOffset(delayOffset);
+					runtime += delayNum + delayOffset;
 					runtimeNoOffset += delayNum;
 					if(sectionRandomize && isRandomizingSection && shouldBalance)
-						sectionTotalOffset += offset;
+						sectionTotalOffset += delayOffset;
 				}
 			}else if(instr instanceof MouseMove)
 			{
@@ -193,7 +204,7 @@ public class InstructionList
 		return builder;
 	}
 	
-	private Instruction getInstrForString(String[] argsSplit, int i)
+	private Instruction getInstrForString(String[] argsSplit, int line)
 	{
 		Instruction instruction;
 		switch(argsSplit[0])
@@ -217,7 +228,7 @@ public class InstructionList
 				instruction = new Custom();
 				break;
 			default:
-				throw new IllegalArgumentException("Unknown instruction at line " + (i + 1));
+				throw new IllegalArgumentException("Unknown instruction at line " + line);
 		}
 		try
 		{
@@ -225,7 +236,7 @@ public class InstructionList
 		}catch(Exception e)
 		{
 			throw new IllegalArgumentException(e.getClass().getSimpleName()
-				+ ": " + e.getMessage() + " (line " + (i + 1) + ")");
+				+ ": " + e.getMessage() + " (line " + line + ")");
 		}
 		return instruction;
 	}

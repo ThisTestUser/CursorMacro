@@ -60,7 +60,7 @@ public class DefaultPlayer extends Player
 				}finally
 				{
 					if(!playing)
-						parent.resetButtonsToIdle();
+						parent.resetToIdleState();
 				}
 			}
 		};
