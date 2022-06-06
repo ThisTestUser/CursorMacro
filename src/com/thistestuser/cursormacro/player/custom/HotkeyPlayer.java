@@ -61,6 +61,12 @@ public class HotkeyPlayer extends Player
 		return execution != null && execution.isAlive();
 	}
 	
+	@Override
+	public boolean shouldStop()
+	{
+		return !listening;
+	}
+	
 	public void activateKeyMacro(int keyCode)
 	{
 		if(!listening || isRunning())

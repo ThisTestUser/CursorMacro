@@ -30,6 +30,11 @@ public abstract class Player
 	 * Check if the thread has terminated yet. If this is true, nothing is allowed to be run.
 	 */
 	public abstract boolean isRunning();
+	
+	/**
+	 * Returns if the execution should stop. This is used to exit from instructions that may run forever.
+	 */
+	public abstract boolean shouldStop();
 
 	public void registerMouse(boolean press, int button)
 	{

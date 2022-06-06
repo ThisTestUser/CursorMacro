@@ -81,6 +81,12 @@ public class DefaultPlayer extends Player
 	}
 	
 	@Override
+	public boolean shouldStop()
+	{
+		return !playing;
+	}
+	
+	@Override
 	public boolean hasInstructions()
 	{
 		return !list.getInstructions().isEmpty();
